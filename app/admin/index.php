@@ -1,12 +1,81 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Welcome Admin</h1>
-    <a href="../../auth/signout.php">Sign Out</a>
-</body>
+    <?php
+    require_once  '../../config/config.php';
+    require_once  '../../config/functions.php';
+
+    requireRole('admin');
+
+        logActivity(
+            $pdo,
+            $_SESSION['user_id'],
+            $_SESSION['user_email'],
+            'view_activity_logs',
+            'success'
+        );
+
+    // ACtivity logs Quer#3
+    $stmt =$pdo->query("
+        SELECT * 
+        FROM activity_logs 
+        ORDER BY activity_log_created_at DESC
+        ");
+
+    $activies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    ?>
+
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.8/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="https://cdn.datatables.net/3.0.4/css/dataTables.bootstrap5.min.css" />
+
+    </head>
+    <body>
+        <h1>Welcome Admin</h1>
+        <a href="../../auth/signout.php">Sign Out</a>
+    <table id="example" class="table table-striped" style="width:auto">
+        <thead>
+            <tr>
+                <th>Record ID</th>
+                <th>User ID</th>
+                <th>User Email</th>
+                <th>Action</th>
+                <th>Status</th>
+                <th>Ip Address</th>
+                <th>User Agent</th>
+                <th>Date & Time</th>
+            </tr>
+        </thead>
+        <tbody>
+
+        <?php foreach ($activies as $activity): ?>
+            <tr>
+                <td><?php echo htmlspecialchars($activity['activity_log_id']); ?></td>
+                <td><?php echo htmlspecialchars($activity['user_id']); ?></td>
+                <td><?php echo htmlspecialchars($activity['user_email']); ?></td>
+                <td><?php echo htmlspecialchars($activity['activity_log_action']); ?></td>
+                <td><?php echo htmlspecialchars($activity['activity_log_status']); ?></td>
+                <td><?php echo htmlspecialchars($activity['activity_log_ip_address']); ?></td>
+                <td><?php echo htmlspecialchars($activity['activity_log_user_agent']); ?></td>
+                <td><?php echo htmlspecialchars($activity['activity_log_created_at']); ?></td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+    </body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.8/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/3.0.4/js/dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/3.0.4/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    new DataTable('#example', {
+        scrollY: '400px',
+        autoWidth: false,
+    });
+</script>
 </html>

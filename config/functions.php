@@ -5,7 +5,6 @@ function redirect($path){
     exit;
 }
 
-
 function loginUser($pdo, $login, $password)
 {
     $sql = "

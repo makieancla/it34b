@@ -64,5 +64,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         echo "<p>Failed to log activity.</p>";
     }
-}
-
+}   
