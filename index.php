@@ -61,16 +61,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'){
     <form method="post">
         <label>Username or Email</label>
         <input type="text"
-               name="login"
-               required>
+            name="login"
+            required>
 
         <br>
         <br>
 
         <label>Password</label>
         <input type="password"
-               name="password"
-               required>
+            name="password"
+            required>
         <br>
 
         <button type="submit">Sign In</button>
