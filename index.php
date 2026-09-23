@@ -1,7 +1,7 @@
 <?php
 
 require_once 'config/config.php';
-require_once 'config/functions.php';
+
 
 if (isset($_SESSION['user_id'])) {
     header('Location: ' . BASE_URL . '/app/' . $_SESSION['user_role'] . '/index.php');
@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'){
     $login = trim($_POST['login'] ?? '');
     $password = $_POST['password'] ?? '';
 
-     $error = 'Invalid login credentials';
+    $error = 'Invalid login credentials';
 
     if ($login === '' || $password === ''){
 
