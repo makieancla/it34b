@@ -30,19 +30,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'){
     
     } else{
 
-        if(loginUser($pdo, $login, $password)){
+        $result = loginUser($pdo, $login, $password);
 
-            //Log incomplete login attempt
+        if($result === true){
+
+            //Log successful login attempt
             logActivity(
                 $pdo,$_SESSION['user_id'],
                 $_SESSION['user_email'],
                 'login',
                 'success'
             );
-
-            echo 'Location: ' . BASE_URL . '/app/' . $_SESSION['user_role'] . '/index.php';
+            echo('Location: ' . BASE_URL . '/app/' . $_SESSION['user_role'] . '/index.php');
             header('Location: ' . BASE_URL . '/app/' . $_SESSION['user_role'] . '/index.php');
             exit;
+
+        }elseif($result === 'active_session'){
+        
+
+            $error = 'This account is already logged in on another device';
+
+        } else{
+
+            $error = 'Invalid login credentials';
         }
     }
 }
@@ -75,6 +85,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'){
 
         <button type="submit">Sign In</button>
     </form>
+
+    <?php if ($error !== ''): ?>
+        <p><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
+    <?php endif; ?>
 
 </body>
 </html>
