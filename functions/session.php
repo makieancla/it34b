@@ -30,7 +30,7 @@ function endUserSession($pdo)
 {
     if (!isset($_SESSION['session_id'])) {
         return false;
-    }
+}
 
     $session_id = $_SESSION['session_id'];
 

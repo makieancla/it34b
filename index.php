@@ -47,7 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'){
 
         }elseif($result === 'active_session'){
         
-
             $error = 'This account is already logged in on another device';
 
         } else{
