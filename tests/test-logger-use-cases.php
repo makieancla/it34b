@@ -1,8 +1,8 @@
 <?php
-require_once __DIR__ . '/../config/config.php';
+require_once(__DIR__ . '/../config/config.php');
 
-$user_ID = $_SESSION['user_id'] ?? null;
-$user_email = $_SESSION['user_email'] ?? null;
+$user_id = "root" ?? null;
+$user_email = "root" ?? null;
 
 $buttons = [
     'login'              => '#3498db',

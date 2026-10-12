@@ -1,10 +1,4 @@
 <?php
-
-function redirect($path){
-    header("Location: " . BASE_URL . $path);
-    exit;
-}
-
 function loginUser($pdo, $login, $password)
 {
     $sql = "
@@ -16,7 +10,7 @@ function loginUser($pdo, $login, $password)
             user_role
         FROM users
         WHERE user_email = :login
-           OR user_username = :login
+        OR user_username = :login
         LIMIT 1
     ";
 
@@ -33,10 +27,17 @@ function loginUser($pdo, $login, $password)
         return false;
     }
 
+    // check if user already has an active session
+    if(hasActiveUserSession($pdo,$user['user_id'])){
+        return 'active_session';
+    }
+    
     $_SESSION['user_id'] = $user['user_id'];
     $_SESSION['user_email'] = $user['user_email'];
     $_SESSION['user_username'] = $user['user_username'];
     $_SESSION['user_role'] = $user['user_role'];
+
+    $_SESSION['session_id'] = StartUserSession($pdo);
 
     return true;
 }
@@ -47,16 +48,19 @@ function requireLogin()
         header('Location: ' . BASE_URL . '/index.php');
         exit;
     }
+    checkSessionTimeout();
 }
 
 function requireRole($role)
 {
     requireLogin();
 
-    if ($_SESSION['user_role'] !== $role) {
-        http_response_code(403);
-        die('Access denied.');
-    }
+    // if ($_SESSION['user_role'] !== $role) {
+    //     http_response_code(403);
+    //     die('Access denied.');
+    // }
+
+    
 }
 
 ?>

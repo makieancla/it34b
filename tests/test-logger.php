@@ -1,9 +1,9 @@
 <?php
 
-require_once __DIR__ . '/../config/config.php';
+require_once(__DIR__ . '/../config/config.php');
 
-$user_id = "root";
-$user_email = "root";
+$user_id = $_SESSION['user_id'] ?? null;
+$user_email = $_SESSION['user_email'] ?? null;
 
 $success = logActivity(
     $pdo,
