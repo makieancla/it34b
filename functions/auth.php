@@ -27,7 +27,7 @@ function loginUser($pdo, $login, $password)
         return false;
     }
 
-    // checl if user already has an active session
+    // check if user already has an active session
     if(hasActiveUserSession($pdo,$user['user_id'])){
         return 'active_session';
     }
@@ -48,16 +48,19 @@ function requireLogin()
         header('Location: ' . BASE_URL . '/index.php');
         exit;
     }
+    checkSessionTimeout();
 }
 
 function requireRole($role)
 {
     requireLogin();
 
-    if ($_SESSION['user_role'] !== $role) {
-        http_response_code(403);
-        die('Access denied.');
-    }
+    // if ($_SESSION['user_role'] !== $role) {
+    //     http_response_code(403);
+    //     die('Access denied.');
+    // }
+
+    
 }
 
 ?>

@@ -1,6 +1,7 @@
 <?php
 
 function redirect($path){
-    header("Location: " . BASE_URL . $path);
+    header("location:" . BASE_URL . $path);
     exit;
 }
+?>

@@ -1,9 +1,8 @@
 <?php
-
 require_once 'config/config.php';
 
 
-if (isset($_SESSION['user_id'])) {
+if(isset($_SESSION['user_id'])){
     header('Location: ' . BASE_URL . '/app/' . $_SESSION['user_role'] . '/index.php');
     exit;
 }
@@ -46,7 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'){
             exit;
 
         }elseif($result === 'active_session'){
-        
+                echo 'This account is already logged in on another device';
+
+
             $error = 'This account is already logged in on another device';
 
         } else{
@@ -66,27 +67,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'){
     <title>Document</title>
 </head>
 <body>
-
-    <form method="post">
+    <form method="POST">
         <label>Username or Email</label>
         <input type="text"
             name="login"
             required>
-
         <br>
         <br>
-
         <label>Password</label>
         <input type="password"
             name="password"
             required>
         <br>
-
         <button type="submit">Sign In</button>
     </form>
-
-    <?php if ($error !== ''): ?>
-        <p><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
+    <?php if(isset($_GET['timeout'])): ?>
+        <p> Your session has expired due to inactivity. Please login again </p>
     <?php endif; ?>
 
 </body>

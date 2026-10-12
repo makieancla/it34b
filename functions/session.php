@@ -52,7 +52,7 @@ function endUserSession($pdo)
 }
 
 // Check if User Already Has an Active Session
-function hasActiveUSerSession($pdo, $user_id)
+function hasActiveUserSession($pdo, $user_id)
 {
     $stmt = $pdo->prepare("
         SELECT session_id
@@ -67,6 +67,46 @@ function hasActiveUSerSession($pdo, $user_id)
     ]);
 
     return (bool) $stmt->fetchColumn();
+}
+
+function checkSessionTimeout(){
+    global $pdo;
+    //Timeout varibale
+    //10 seconds for testing
+    //1800s = 30 mins
+    $timeout = 1800;
+
+    if(isset($_SESSION['last_activity'])){
+        
+        $inactive = time() - $_SESSION ['last_activity'];
+
+        if($inactive>=$timeout){
+            logActivity(
+                $pdo,
+                $_SESSION['user_id'],
+                $_SESSION['user_email'] ?? null,
+                'logout-session-timeout',
+                'success'
+            );
+        }
+
+        //END database session
+        endUserSession($pdo);
+
+        //Destroy php session
+        session_unset();
+        session_destroy();
+
+        //redirect 
+        header(
+            'location: '.
+            BASE_URL .
+            '/index.php?timeout=1'
+        );
+    }
+
+    //update last activity
+    $_SESSION['last_activity'] = time();
 }
 
 ?>
