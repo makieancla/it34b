@@ -74,7 +74,7 @@ function checkSessionTimeout(){
     //Timeout varibale
     //10 seconds for testing
     //1800s = 30 mins
-    $timeout = 1800;
+    $timeout = 5;
 
     if(isset($_SESSION['last_activity'])){
         
@@ -88,21 +88,22 @@ function checkSessionTimeout(){
                 'logout-session-timeout',
                 'success'
             );
+
+            //END database session
+            endUserSession($pdo);
+
+            //Destroy php session
+            session_unset();
+            session_destroy();
+
+            //redirect 
+            header(
+                'location: '.
+                BASE_URL .
+                '/index.php?timeout=1'
+            );
+            exit;
         }
-
-        //END database session
-        endUserSession($pdo);
-
-        //Destroy php session
-        session_unset();
-        session_destroy();
-
-        //redirect 
-        header(
-            'location: '.
-            BASE_URL .
-            '/index.php?timeout=1'
-        );
     }
 
     //update last activity

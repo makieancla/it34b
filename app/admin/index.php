@@ -37,7 +37,7 @@ $activities = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <body>
     <h1>Welcome Admin</h1>
     <a href="../auth/signout.php">Sign Out</a> 
-   <table id="example" class="table table-striped" style="width:100%">
+    <table id="example" class="table table-striped" style="width:100%">
     <thead>
         <tr>
             <th>Record ID</th>
