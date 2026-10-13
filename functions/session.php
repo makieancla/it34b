@@ -51,6 +51,33 @@ function endUserSession($pdo)
     ]);
 }
 
+// Get User Session Duration
+function getSessionDuration($pdo)
+{
+    if (!isset($_SESSION['session_id'])) {
+        return 0;
+    }
+
+    $session_id = $_SESSION['session_id'];
+
+    $stmt = $pdo->prepare("
+        SELECT TIMESTAMPDIFF(
+            SECOND,
+            session_start,
+            COALESCE(session_end, NOW())
+        )
+        FROM user_sessions
+        WHERE session_id = :session_id
+    ");
+
+    $stmt->execute([
+        'session_id' => $session_id
+    ]);
+
+    return (int) $stmt->fetchColumn();
+}
+
+
 // Check if User Already Has an Active Session
 function hasActiveUserSession($pdo, $user_id)
 {
