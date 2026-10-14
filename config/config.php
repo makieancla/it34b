@@ -26,6 +26,4 @@ DB_NAME, DB_USER, DB_PASS,
     die("Connection failed: " . $e->getMessage());
 }
 
-
-
 ?>

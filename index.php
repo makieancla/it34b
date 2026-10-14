@@ -1,5 +1,5 @@
 <?php
-require_once 'config/config.php';
+require_once __DIR__ . '/config/config.php';
 
 
 if(isset($_SESSION['user_id'])){
@@ -81,6 +81,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'){
         <br>
         <button type="submit">Sign In</button>
     </form>
+    <?php if ($error !== ''): ?>
+    <p>
+        <?= htmlspecialchars($error) ?>
+    </p>
+<?php endif; ?>
+
     <?php if(isset($_GET['timeout'])): ?>
         <p> Your session has expired due to inactivity. Please login again </p>
     <?php endif; ?>

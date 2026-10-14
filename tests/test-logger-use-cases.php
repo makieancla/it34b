@@ -47,11 +47,11 @@ $buttons = [
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? "test_activity";
 
-    $status = random_int(0, 1) === 1 ? 'Success' : 'Failed';
+    $status = random_int(0, 1) === 1 ? 'success' : 'failed';
 
     $success = logActivity(
         $pdo,
-        $user_ID,
+        $user_id,
         $user_email,
         $action,
         $status
