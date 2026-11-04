@@ -130,7 +130,7 @@ if ($action === 'export') {
                 $r['session_duration'] = 'Active';
             }
         }
-        
+
         unset($r);
 
         exportCsv(
