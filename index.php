@@ -1,9 +1,8 @@
 <?php
+require_once __DIR__ . '/config/config.php';
 
-require_once 'config/config.php';
-require_once 'config/functions.php';
 
-if (isset($_SESSION['user_id'])) {
+if(isset($_SESSION['user_id'])){
     header('Location: ' . BASE_URL . '/app/' . $_SESSION['user_role'] . '/index.php');
     exit;
 }
@@ -11,10 +10,13 @@ if (isset($_SESSION['user_id'])) {
 $error='';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST'){
+
+    requireCsrfToken();
+
     $login = trim($_POST['login'] ?? '');
     $password = $_POST['password'] ?? '';
 
-     $error = 'Invalid login credentials';
+    $error = 'Invalid login credentials';
 
     if ($login === '' || $password === ''){
 
@@ -26,23 +28,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'){
             'login', 
             'failed'
         );
+        
 
     
     } else{
 
-        if(loginUser($pdo, $login, $password)){
+        $result = loginUser($pdo, $login, $password);
 
-            //Log incomplete login attempt
+        if($result === true){
+
+            //Log successful login attempt
             logActivity(
                 $pdo,$_SESSION['user_id'],
                 $_SESSION['user_email'],
                 'login',
                 'success'
             );
-
-            echo 'Location: ' . BASE_URL . '/app/' . $_SESSION['user_role'] . '/index.php';
+            echo('Location: ' . BASE_URL . '/app/' . $_SESSION['user_role'] . '/index.php');
             header('Location: ' . BASE_URL . '/app/' . $_SESSION['user_role'] . '/index.php');
             exit;
+
+        }elseif($result === 'active_session'){
+                echo 'This account is already logged in on another device';
+
+
+            $error = 'This account is already logged in on another device';
+
+        } else{
+
+            $error = 'Invalid login credentials';
         }
     }
 }
@@ -54,27 +68,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Login</title>
 </head>
 <body>
 
-    <form method="post">
-        <label>Username or Email</label>
-        <input type="text"
-               name="login"
-               required>
+<form method="POST">
+    <label>Username or Email</label>
+    
+    <input type="hidden" name="csrf_token" 
+    value="<?= htmlspecialchars(generateCsrfToken()) ?>" >
+    
+    <input type="text" name="login" required>
+    <br>
+    <br>
+    <label>Password</label>
+    <input type="password" name="password"required>
+    <br>
+    <button type="submit">Sign In</button>
+</form>
 
-        <br>
-        <br>
+<?php if ($error !== ''): ?>
+    <p>
+        <?= htmlspecialchars($error) ?>
+    </p>
+<?php endif; ?>
 
-        <label>Password</label>
-        <input type="password"
-               name="password"
-               required>
-        <br>
-
-        <button type="submit">Sign In</button>
-    </form>
+<?php if (isset($_GET['timeout'])): ?>
+    <p>Your session has expired due to inactivity. Please log in again.</p>
+<?php endif; ?>
 
 </body>
 </html>

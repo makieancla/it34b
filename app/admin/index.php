@@ -1,81 +1,351 @@
-    <?php
-    require_once  '../../config/config.php';
-    require_once  '../../config/functions.php';
+<?php
+require_once '../../config/config.php';
 
-    requireRole('admin');
+
+requireRole('admin');
+
+
+logActivity($pdo,$_SESSION['user_id'],
+        $_SESSION['user_email'],
+        'view_activity_logs',
+        'success'
+);
+
+// Determine current section
+$section = $_GET['section'] ?? 'activity-logs';
+
+// Determine CRUD Operation
+$action = $_GET['action'] ?? '';
+
+// Fetch data based on current section
+if ($section === 'activity-logs') {
+
+    // Activity Logs Query
+    $stmt = $pdo->query("
+        SELECT *
+        FROM activity_logs
+        ORDER BY activity_log_created_at DESC
+    ");
+
+    $activities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+} elseif ($section === 'user-sessions') {
+
+    // User Sessions Query
+    $stmt = $pdo->query("
+        SELECT
+            us.session_id,
+            us.user_id,
+            u.user_username,
+            u.user_email,
+            u.user_role,
+            us.session_start,
+            us.session_end,
+            us.session_duration
+        FROM user_sessions us
+        INNER JOIN users u
+            ON us.user_id = u.user_id
+        ORDER BY us.session_start DESC
+    ");
+
+    $sessions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+if ($action === 'export') {
+
+    if ($section === 'activity-logs') {
+
+        $stmt = $pdo->query("
+            SELECT
+                activity_log_id,
+                user_id,
+                user_email,
+                activity_log_action,
+                activity_log_status,
+                activity_log_ip_address,
+                activity_log_user_agent,
+                activity_log_created_at
+            FROM activity_logs
+            ORDER BY activity_log_created_at DESC
+        ");
+
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         logActivity(
             $pdo,
             $_SESSION['user_id'],
             $_SESSION['user_email'],
-            'view_activity_logs',
+            'export_activity_logs',
             'success'
         );
 
-    // ACtivity logs Quer#3
-    $stmt =$pdo->query("
-        SELECT * 
-        FROM activity_logs 
-        ORDER BY activity_log_created_at DESC
+        exportCsv(
+            'activity_logs',
+            [
+                'Record ID', 'User ID', 'User Email', 'Action',
+                'Status', 'IP Address', 'User Agent', 'Date & Time',
+            ],
+            $rows
+        );
+    }
+
+    if ($section === 'user-sessions') {
+
+        $stmt = $pdo->query("
+            SELECT
+                us.session_id,
+                us.user_id,
+                u.user_username,
+                u.user_email,
+                u.user_role,
+                us.session_start,
+                us.session_end,
+                us.session_duration
+            FROM user_sessions us
+            INNER JOIN users u ON us.user_id = u.user_id
+            ORDER BY us.session_start DESC
         ");
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $activies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        logActivity(
+            $pdo,
+            $_SESSION['user_id'],
+            $_SESSION['user_email'],
+            'export_user_sessions',
+            'success'
+        );
 
-    ?>
+        foreach ($rows as &$r) {
+            $r['session_end'] = $r['session_end'] ?: 'Active';
+            if ($r['session_duration'] !== null) {
+                $s       = (int) $r['session_duration'];
+                $hours   = floor($s / 3600);
+                $minutes = floor(($s % 3600) / 60);
+                $seconds = $s % 60;
+                $r['session_duration'] = sprintf(
+                    '%02d hr %02d min %02d sec',
+                    $hours, $minutes, $seconds
+                );
+            } else {
+                $r['session_duration'] = 'Active';
+            }
+        }
+
+        unset($r);
+
+        exportCsv(
+            'user_sessions',
+            [
+                'Session ID', 'User ID', 'Username', 'Email',
+                'Role', 'Session Start', 'Session End', 'Duration',
+            ],
+            $rows
+        );
+    }
+}
+
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="container-fluid">
+
+    <h1>Welcome Admin</h1>
+
+    <a href="../../auth/signout.php">Sign Out</a>
+
+    <hr>
+
+    <nav>
+        <a href="index.php?section=activity-logs">Activity Logs |</a>
+        <a href="index.php?section=user-sessions">User Sessions |</a>
+    </nav>
+
+    <?php if ($section === 'activity-logs'): ?>
+
+        <h4>Activity Logs</h4>
+
+        <table id="activityTable" class="table table-bordered table-sm">
+
+            <thead>
+                <tr>
+                    <th>Record ID</th>
+                    <th>User ID</th>
+                    <th>User Email</th>
+                    <th>Action</th>
+                    <th>Status</th>
+                    <th>IP Address</th>
+                    <th>User Agent</th>
+                    <th>Date & Time</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                <?php foreach ($activities as $activity): ?>
+
+                    <tr>
+                        <td>
+                            <?= htmlspecialchars($activity['activity_log_id']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($activity['user_id']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($activity['user_email']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($activity['activity_log_action']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($activity['activity_log_status']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($activity['activity_log_ip_address']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($activity['activity_log_user_agent']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($activity['activity_log_created_at']) ?>
+                        </td>
+                    </tr>
+
+                <?php endforeach; ?>
+
+            </tbody>
+
+        </table>
+
+    <?php endif; ?>
 
 
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Document</title>
+    <?php if ($section === 'user-sessions'): ?>
 
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.8/css/bootstrap.min.css" />
-        <link rel="stylesheet" href="https://cdn.datatables.net/3.0.4/css/dataTables.bootstrap5.min.css" />
+        <h4>User Sessions
+            <a href="index.php?section=user-sessions&amp;action=export">Export CSV</a>
+        </h4>
 
-    </head>
-    <body>
-        <h1>Welcome Admin</h1>
-        <a href="../../auth/signout.php">Sign Out</a>
-    <table id="example" class="table table-striped" style="width:auto">
-        <thead>
-            <tr>
-                <th>Record ID</th>
-                <th>User ID</th>
-                <th>User Email</th>
-                <th>Action</th>
-                <th>Status</th>
-                <th>Ip Address</th>
-                <th>User Agent</th>
-                <th>Date & Time</th>
-            </tr>
-        </thead>
-        <tbody>
+        <table id="sessionTable" class="table table-bordered table-sm">
 
-        <?php foreach ($activies as $activity): ?>
-            <tr>
-                <td><?php echo htmlspecialchars($activity['activity_log_id']); ?></td>
-                <td><?php echo htmlspecialchars($activity['user_id']); ?></td>
-                <td><?php echo htmlspecialchars($activity['user_email']); ?></td>
-                <td><?php echo htmlspecialchars($activity['activity_log_action']); ?></td>
-                <td><?php echo htmlspecialchars($activity['activity_log_status']); ?></td>
-                <td><?php echo htmlspecialchars($activity['activity_log_ip_address']); ?></td>
-                <td><?php echo htmlspecialchars($activity['activity_log_user_agent']); ?></td>
-                <td><?php echo htmlspecialchars($activity['activity_log_created_at']); ?></td>
-            </tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table>
-    </body>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.8/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.datatables.net/3.0.4/js/dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/3.0.4/js/dataTables.bootstrap5.min.js"></script>
+            <thead>
+                <tr>
+                    <th>Session ID</th>
+                    <th>User ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Session Start</th>
+                    <th>Session End</th>
+                    <th>Duration</th>
+                </tr>
+            </thead>
 
-<script>
-    new DataTable('#example', {
-        scrollY: '400px',
-        autoWidth: false,
-    });
-</script>
+            <tbody>
+
+                <?php foreach ($sessions as $session): ?>
+
+                    <tr>
+
+                        <td>
+                            <?= htmlspecialchars($session['session_id']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($session['user_id']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($session['user_username']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($session['user_email']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($session['user_role']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($session['session_start']) ?>
+                        </td>
+
+                        <td>
+                            <?= $session['session_end']
+                                ? htmlspecialchars($session['session_end'])
+                                : 'Active'
+                            ?>
+                        </td>
+
+                        <td>
+
+                            <?php
+
+                                if ($session['session_duration'] !== null) {
+
+                                    $seconds = (int) $session['session_duration'];
+
+                                    $hours = floor($seconds / 3600);
+                                    $minutes = floor(($seconds % 3600) / 60);
+                                    $seconds = $seconds % 60;
+
+                                    echo sprintf(
+                                        '%02d hr %02d min %02d sec',
+                                        $hours,
+                                        $minutes,
+                                        $seconds
+                                    );
+
+                                } else {
+
+                                    echo 'Ongoing';
+
+                                }
+
+                            ?>
+
+                        </td>
+
+                    </tr>
+
+                <?php endforeach; ?>
+
+            </tbody>
+
+        </table>
+
+    <?php endif; ?>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $('#activityTable, #sessionTable').DataTable({
+            pageLength: 25
+        });
+    </script>
+</body>
 </html>
