@@ -10,6 +10,9 @@ if(isset($_SESSION['user_id'])){
 $error='';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST'){
+
+    requireCsrfToken();
+
     $login = trim($_POST['login'] ?? '');
     $password = $_POST['password'] ?? '';
 
@@ -25,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'){
             'login', 
             'failed'
         );
+        
 
     
     } else{
@@ -64,32 +68,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Login</title>
 </head>
 <body>
-    <form method="POST">
-        <label>Username or Email</label>
-        <input type="text"
-            name="login"
-            required>
-        <br>
-        <br>
-        <label>Password</label>
-        <input type="password"
-            name="password"
-            required>
-        <br>
-        <button type="submit">Sign In</button>
-    </form>
-    <?php if ($error !== ''): ?>
+
+<form method="POST">
+    <label>Username or Email</label>
+    
+    <input type="hidden" name="csrf_token" 
+    value="<?= htmlspecialchars(generateCsrfToken()) ?>" >
+    
+    <input type="text" name="login" required>
+    <br>
+    <br>
+    <label>Password</label>
+    <input type="password" name="password"required>
+    <br>
+    <button type="submit">Sign In</button>
+</form>
+
+<?php if ($error !== ''): ?>
     <p>
         <?= htmlspecialchars($error) ?>
     </p>
 <?php endif; ?>
 
-    <?php if(isset($_GET['timeout'])): ?>
-        <p> Your session has expired due to inactivity. Please login again </p>
-    <?php endif; ?>
+<?php if (isset($_GET['timeout'])): ?>
+    <p>Your session has expired due to inactivity. Please log in again.</p>
+<?php endif; ?>
 
 </body>
 </html>
